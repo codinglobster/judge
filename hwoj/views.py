@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+
 # Create your views here.
 #coding=utf-8
 
@@ -7,7 +8,7 @@ from django.shortcuts import render,render_to_response
 from django.http import HttpResponse,HttpResponseRedirect
 from django.template import RequestContext
 from django import forms
-from hwoj.models import User
+from hwoj.models import User, Question
 
 #表单
 class UserForm(forms.Form):
@@ -33,8 +34,6 @@ def regist(request):
 
 #登录
 def login(request):
-	return HttpResponse("哈哈，死胖子！！")
-'''
 	if request.method == 'POST':
 		uf = UserForm(request.POST)
 		if uf.is_valid():
@@ -43,19 +42,25 @@ def login(request):
 			password=uf.cleaned_data['password']
 
 			#获取表单数据与数据库比较
-			user=User.objects.filter(username__exact= username, password__exact=password)
+			user=User.objects.filter(username__exact=username, password__exact=password)
 			if user:
-				#比较成功，跳转主页
-				response=HttpResponseRedirect('home/')
+				questions = Question.objects.all()
+				response=render(request, 'home.html', {'questions': questions})
+				#response=HttpResponseRedirect('/home', context)
 				response.set_cookie('username', username, 3600)
 				return response
 			else:
 				return HttpResponseRedirect('/')
 	else:
 		uf=UserForm()
-		return render(request, 'login.html', {'uf':uf})'''
+		return render(request, 'login.html', {'uf':uf})
 
 #登录成功
 def home(request):
-	username=request.COOKIES.get('username', '')
-	return render(request, 'home.html', {'username':username})
+	username=request.COOKIES.get('username')
+
+	if username:	
+		return render(request, 'home.html', {'username':username})
+	else:
+		uf=UserForm()
+		return HttpResponseRedirect('/', uf)
